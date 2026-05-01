@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FeedForward — Food Donation Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --card: #1e1e1e;
+    --border: #2a2a2a;
+    --accent: #e8832a;
+    --accent2: #f5c842;
+    --green: #4caf7d;
+    --red: #e05c5c;
+    --text: #f0ece4;
+    --muted: #888;
+    --font-display: 'Playfair Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 100;
+    background: rgba(13,13,13,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2.5rem; height: 64px;
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--text); }
+  .nav-links { display: flex; gap: 2rem; list-style: none; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 0.9rem; font-weight: 500;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover, .nav-links a.active { color: var(--text); }
+  .nav-cta {
+    background: var(--accent); color: #fff;
+    border: none; padding: 0.55rem 1.4rem;
+    border-radius: 6px; font-family: var(--font-body);
+    font-weight: 600; font-size: 0.875rem;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .nav-cta:hover { background: #d0711f; }
+
+  /* PAGES */
+  .page { display: none; padding-top: 64px; min-height: 100vh; animation: fadeIn 0.35s ease; }
+  .page.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── HOME ── */
+  .hero {
+    position: relative;
+    min-height: calc(100vh - 64px);
+    display: flex; align-items: center;
+    padding: 4rem 2.5rem 2rem;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background: radial-gradient(ellipse 80% 60% at 70% 50%, rgba(232,131,42,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 20% 80%, rgba(76,175,125,0.08) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 680px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    background: rgba(232,131,42,0.1); border: 1px solid rgba(232,131,42,0.3);
+    padding: 0.35rem 0.9rem; border-radius: 100px;
+    font-size: 0.8rem; color: var(--accent); margin-bottom: 1.5rem;
+    font-weight: 600; letter-spacing: 0.5px;
+  }
+  .hero h1 {
+    font-family: var(--font-display); font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 900; line-height: 1.05; color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p {
+    font-size: 1.1rem; color: var(--muted); line-height: 1.7;
+    margin-bottom: 2.5rem; max-width: 520px;
+  }
+  .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .btn-primary {
+    background: var(--accent); color: #fff;
+    border: none; padding: 0.9rem 2rem;
+    border-radius: 8px; font-family: var(--font-body);
+    font-weight: 600; font-size: 1rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #d0711f; transform: translateY(-1px); }
+  .btn-secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid var(--border); padding: 0.9rem 2rem;
+    border-radius: 8px; font-family: var(--font-body);
+    font-weight: 500; font-size: 1rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .stats-strip {
+    display: flex; gap: 0; border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stat {
+    flex: 1; padding: 2rem; text-align: center;
+    border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .stat:last-child { border-right: none; }
+  .stat:hover { background: var(--card); }
+  .stat-num {
+    font-family: var(--font-display); font-size: 2.2rem;
+    font-weight: 900; color: var(--accent);
+  }
+  .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .how-section { padding: 5rem 2.5rem; }
+  .section-label {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px;
+    color: var(--accent); font-weight: 600; margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-family: var(--font-display); font-size: clamp(2rem, 4vw, 2.8rem);
+    font-weight: 900; color: var(--text); margin-bottom: 1rem;
+  }
+  .section-sub { color: var(--muted); max-width: 520px; line-height: 1.7; margin-bottom: 3.5rem; }
+  .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .step-card { background: var(--surface); padding: 2.5rem 2rem; transition: background 0.2s; }
+  .step-card:hover { background: var(--card); }
+  .step-num {
+    font-family: var(--font-display); font-size: 3.5rem;
+    font-weight: 900; color: rgba(232,131,42,0.15);
+    line-height: 1; margin-bottom: 1rem;
+  }
+  .step-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .step-title { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .step-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+  /* ── DONATE ── */
+  .page-header { padding: 3rem 2.5rem 1.5rem; border-bottom: 1px solid var(--border); }
+  .page-header h2 { font-family: var(--font-display); font-size: 2.2rem; font-weight: 900; }
+  .page-header p { color: var(--muted); margin-top: 0.4rem; }
+
+  .form-container { max-width: 760px; margin: 0 auto; padding: 2.5rem; }
+  .form-section { margin-bottom: 2.5rem; }
+  .form-section-title {
+    font-weight: 700; font-size: 0.8rem;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--accent); margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
+  }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.45rem; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 0.85rem; font-weight: 500; color: #ccc; }
+  input, select, textarea {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.75rem 1rem;
+    color: var(--text); font-family: var(--font-body); font-size: 0.95rem;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(232,131,42,0.1);
+  }
+  select option { background: var(--card); }
+  textarea { resize: vertical; min-height: 100px; }
+  .food-types { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+  .food-type-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 100px; padding: 0.45rem 1rem;
+    color: var(--muted); font-family: var(--font-body);
+    font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+  }
+  .food-type-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .food-type-btn.selected { background: rgba(232,131,42,0.15); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .submit-row { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem; }
+
+  /* ── LISTINGS ── */
+  .listings-controls {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 1; min-width: 220px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.65rem 1rem;
+    color: var(--text); font-family: var(--font-body); font-size: 0.9rem;
+  }
+  .filter-select {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.65rem 1rem;
+    color: var(--text); font-family: var(--font-body); font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .listings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; padding: 2rem 2.5rem; }
+  .listing-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    transition: all 0.25s; cursor: pointer;
+  }
+  .listing-card:hover { border-color: rgba(232,131,42,0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+  .listing-img {
+    height: 140px; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 4rem; position: relative;
+  }
+  .listing-body { padding: 1.25rem; }
+  .listing-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+  .tag {
+    font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+  }
+  .tag-food { background: rgba(232,131,42,0.15); color: var(--accent); }
+  .tag-urgent { background: rgba(224,92,92,0.15); color: var(--red); }
+  .tag-available { background: rgba(76,175,125,0.15); color: var(--green); }
+  .tag-claimed { background: rgba(128,128,128,0.15); color: var(--muted); }
+  .listing-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.3rem; }
+  .listing-meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem; line-height: 1.5; }
+  .listing-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .listing-qty { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+  .claim-btn {
+    background: var(--accent); color: #fff;
+    border: none; padding: 0.45rem 1.1rem;
+    border-radius: 6px; font-family: var(--font-body);
+    font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .claim-btn:hover { background: #d0711f; }
+  .claim-btn.claimed { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .empty-state { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+  .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+
+  /* ── REQUESTS ── */
+  .requests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; padding: 2rem 2.5rem; }
+  .request-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    transition: all 0.2s;
+  }
+  .request-card:hover { border-color: rgba(76,175,125,0.4); }
+  .request-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+  .request-org { font-weight: 700; font-size: 1rem; }
+  .urgency-badge {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    padding: 0.2rem 0.6rem; border-radius: 4px; letter-spacing: 0.5px;
+  }
+  .urgency-high { background: rgba(224,92,92,0.15); color: var(--red); }
+  .urgency-medium { background: rgba(245,200,66,0.15); color: var(--accent2); }
+  .urgency-low { background: rgba(76,175,125,0.15); color: var(--green); }
+  .request-need { font-size: 0.9rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+  .request-details { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem; }
+  .detail-item { background: var(--card); border-radius: 8px; padding: 0.75rem; }
+  .detail-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 0.2rem; }
+  .detail-value { font-size: 0.9rem; font-weight: 600; }
+  .fulfill-btn {
+    width: 100%; background: transparent; color: var(--green);
+    border: 1px solid var(--green); padding: 0.65rem;
+    border-radius: 8px; font-family: var(--font-body);
+    font-weight: 600; font-size: 0.9rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .fulfill-btn:hover { background: rgba(76,175,125,0.1); }
+
+  /* ── DASHBOARD ── */
+  .dashboard-content { padding: 2rem 2.5rem; }
+  .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+  .dash-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .dash-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+  }
+  .dash-card.orange::before { background: var(--accent); }
+  .dash-card.green::before { background: var(--green); }
+  .dash-card.yellow::before { background: var(--accent2); }
+  .dash-card.red::before { background: var(--red); }
+  .dash-metric { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; margin-bottom: 0.25rem; }
+  .dash-metric-label { font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .dash-icon { position: absolute; right: 1.25rem; top: 1.25rem; font-size: 2rem; opacity: 0.15; }
+
+  .activity-table { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .table-header {
+    display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--muted);
+    font-weight: 600;
+  }
+  .table-row {
+    display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem; align-items: center;
+    transition: background 0.15s;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row:hover { background: var(--card); }
+  .status-dot { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-green { background: var(--green); }
+  .dot-yellow { background: var(--accent2); }
+  .dot-red { background: var(--red); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 2rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; max-width: 480px; width: 100%;
+    padding: 2rem; animation: popIn 0.25s ease;
+  }
+  @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+  .modal p { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+  .modal-close {
+    background: var(--surface); color: var(--muted);
+    border: 1px solid var(--border); padding: 0.6rem 1.2rem;
+    border-radius: 8px; cursor: pointer; font-family: var(--font-body); font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+    background: var(--green); color: #fff;
+    padding: 1rem 1.5rem; border-radius: 10px;
+    font-weight: 600; font-size: 0.9rem;
+    transform: translateY(100px); opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* FOOTER */
+  footer {
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 3rem 2.5rem; margin-top: 4rem;
+  }
+  .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 3rem; }
+  .footer-brand p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-top: 0.75rem; max-width: 300px; }
+  .footer-col h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 1rem; }
+  .footer-col a { display: block; color: #888; text-decoration: none; font-size: 0.9rem; margin-bottom: 0.5rem; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--text); }
+  .footer-bottom { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 0.8rem; }
+
+  @media (max-width: 768px) {
+    nav { padding: 0 1.25rem; }
+    .nav-links { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+    .table-header, .table-row { grid-template-columns: 1fr 1fr; }
+    .table-header > *:nth-child(n+3),
+    .table-row > *:nth-child(n+3) { display: none; }
+    .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .stats-strip { flex-direction: column; }
+    .stat { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">Feed<span>Forward</span></div>
+  <ul class="nav-links">
+    <li><a href="#" onclick="showPage('home')" class="active" id="nav-home">Home</a></li>
+    <li><a href="#" onclick="showPage('donate')" id="nav-donate">Donate Food</a></li>
+    <li><a href="#" onclick="showPage('listings')" id="nav-listings">Browse Donations</a></li>
+    <li><a href="#" onclick="showPage('requests')" id="nav-requests">Food Requests</a></li>
+    <li><a href="#" onclick="showPage('dashboard')" id="nav-dashboard">Dashboard</a></li>
+  </ul>
+  <button class="nav-cta" onclick="showPage('donate')">+ Donate Now</button>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🌱 Fighting hunger, one meal at a time</div>
+      <h1>Good food<br>doesn't<br><em>go to waste.</em></h1>
+      <p>FeedForward connects food donors with local shelters, food banks, and families in need. Surplus food becomes someone's next meal.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="showPage('donate')">🍱 Donate Food</button>
+        <button class="btn-secondary" onclick="showPage('listings')">Find Donations</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="stats-strip">
+    <div class="stat">
+      <div class="stat-num" id="stat-meals">2,847</div>
+      <div class="stat-label">Meals Shared</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">143</div>
+      <div class="stat-label">Active Donors</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">68</div>
+      <div class="stat-label">Partner Shelters</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">12t</div>
+      <div class="stat-label">Food Rescued</div>
+    </div>
+  </div>
+
+  <section class="how-section">
+    <div class="section-label">How It Works</div>
+    <h2 class="section-title">Simple. Fast. Impactful.</h2>
+    <p class="section-sub">Three easy steps to redirect surplus food from waste to nourishment.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-icon">📦</div>
+        <div class="step-title">List Your Food</div>
+        <p class="step-desc">Restaurants, grocery stores, events, or households list surplus food with details on quantity and pickup time.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-icon">🔍</div>
+        <div class="step-title">Get Matched</div>
+        <p class="step-desc">Local shelters and food banks browse available donations and claim what they need in real time.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-icon">🚚</div>
+        <div class="step-title">Pick Up & Deliver</div>
+        <p class="step-desc">Coordinate pickup or our volunteer drivers help transport food to the right hands.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-icon">❤️</div>
+        <div class="step-title">Track Impact</div>
+        <p class="step-desc">See exactly how many meals your donation provided. Get a tax-deductible receipt.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">Feed<span>Forward</span></div>
+        <p>Bridging the gap between food surplus and food insecurity in communities everywhere.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="#" onclick="showPage('donate')">Donate Food</a>
+        <a href="#" onclick="showPage('listings')">Browse Listings</a>
+        <a href="#" onclick="showPage('requests')">Food Requests</a>
+        <a href="#" onclick="showPage('dashboard')">Dashboard</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="#">Our Mission</a>
+        <a href="#">Partner With Us</a>
+        <a href="#">Volunteer</a>
+        <a href="#">Contact</a>
+      </div>
+    </div>
+    <div class="footer-bottom">© 2025 FeedForward. Made with ❤️ to reduce hunger.</div>
+  </footer>
+</div>
+
+<!-- DONATE PAGE -->
+<div id="page-donate" class="page">
+  <div class="page-header">
+    <h2>🍱 Donate Food</h2>
+    <p>Fill in the details about the food you'd like to donate.</p>
+  </div>
+  <div class="form-container">
+    <div class="form-section">
+      <div class="form-section-title">Food Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Food Name / Description *</label>
+          <input type="text" id="food-name" placeholder="e.g. Cooked rice and curry" />
+        </div>
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input type="text" id="food-qty" placeholder="e.g. 20 servings, 5 kg" />
+        </div>
+        <div class="form-group">
+          <label>Prepared / Packaged On *</label>
+          <input type="datetime-local" id="food-date" />
+        </div>
+        <div class="form-group">
+          <label>Best Before / Expires By *</label>
+          <input type="datetime-local" id="food-expiry" />
+        </div>
+        <div class="form-group full">
+          <label>Food Type (select all that apply)</label>
+          <div class="food-types" id="food-types">
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🍚 Cooked Meals</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🥦 Fresh Produce</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🍞 Bakery Items</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🥛 Dairy</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🥩 Meat / Protein</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🥫 Packaged / Canned</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🧃 Beverages</button>
+            <button type="button" class="food-type-btn" onclick="toggleType(this)">🥗 Vegan / Vegetarian</button>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Allergen Notes</label>
+          <input type="text" id="allergens" placeholder="e.g. Contains nuts, gluten-free, etc." />
+        </div>
+        <div class="form-group full">
+          <label>Additional Notes</label>
+          <textarea id="food-notes" placeholder="Storage instructions, handling notes, or anything else relevant..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Donor & Pickup Info</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Your Name / Organization *</label>
+          <input type="text" id="donor-name" placeholder="Name or org name" />
+        </div>
+        <div class="form-group">
+          <label>Contact Number *</label>
+          <input type="tel" id="donor-phone" placeholder="+91 XXXXX XXXXX" />
+        </div>
+        <div class="form-group full">
+          <label>Pickup Address *</label>
+          <input type="text" id="pickup-addr" placeholder="Full address for pickup" />
+        </div>
+        <div class="form-group">
+          <label>Pickup Window *</label>
+          <select id="pickup-window">
+            <option value="">Select a window</option>
+            <option>Within 1 hour</option>
+            <option>1–3 hours</option>
+            <option>Today</option>
+            <option>Tomorrow morning</option>
+            <option>Tomorrow afternoon</option>
+            <option>Flexible</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Preferred Recipient</label>
+          <select id="recipient-pref">
+            <option value="">Any (auto-match)</option>
+            <option>Shelter / Orphanage</option>
+            <option>Food Bank</option>
+            <option>Old Age Home</option>
+            <option>School / Children</option>
+            <option>Low-income Families</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-row">
+      <button class="btn-secondary" onclick="clearDonateForm()">Clear</button>
+      <button class="btn-primary" onclick="submitDonation()">🚀 Submit Donation</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTINGS PAGE -->
+<div id="page-listings" class="page">
+  <div class="page-header">
+    <h2>🔍 Available Donations</h2>
+    <p>Browse food donations available near you and claim what you need.</p>
+  </div>
+  <div class="listings-controls">
+    <input class="search-input" type="text" id="search-input" placeholder="🔍  Search by food name, location..." oninput="filterListings()" />
+    <select class="filter-select" id="filter-type" onchange="filterListings()">
+      <option value="">All Types</option>
+      <option>Cooked Meals</option>
+      <option>Fresh Produce</option>
+      <option>Bakery Items</option>
+      <option>Packaged / Canned</option>
+      <option>Dairy</option>
+    </select>
+    <select class="filter-select" id="filter-status" onchange="filterListings()">
+      <option value="">All Status</option>
+      <option>Available</option>
+      <option>Claimed</option>
+    </select>
+  </div>
+  <div class="listings-grid" id="listings-grid"></div>
+</div>
+
+<!-- REQUESTS PAGE -->
+<div id="page-requests" class="page">
+  <div class="page-header">
+    <h2>🙏 Food Requests</h2>
+    <p>These organizations need your help. Can you donate something that matches their needs?</p>
+  </div>
+  <div class="listings-controls">
+    <input class="search-input" type="text" placeholder="🔍  Search requests..." />
+    <select class="filter-select">
+      <option>All Urgency</option>
+      <option>High</option>
+      <option>Medium</option>
+      <option>Low</option>
+    </select>
+  </div>
+  <div class="requests-grid" id="requests-grid"></div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="page-dashboard" class="page">
+  <div class="page-header">
+    <h2>📊 Dashboard</h2>
+    <p>Your donation activity and platform impact overview.</p>
+  </div>
+  <div class="dashboard-content">
+    <div class="dash-grid">
+      <div class="dash-card orange">
+        <div class="dash-icon">🍱</div>
+        <div class="dash-metric" id="total-donations">0</div>
+        <div class="dash-metric-label">Total Donations</div>
+      </div>
+      <div class="dash-card green">
+        <div class="dash-icon">✅</div>
+        <div class="dash-metric" id="claimed-count">0</div>
+        <div class="dash-metric-label">Successfully Claimed</div>
+      </div>
+      <div class="dash-card yellow">
+        <div class="dash-icon">🍽️</div>
+        <div class="dash-metric" id="meals-count">0</div>
+        <div class="dash-metric-label">Meals Provided</div>
+      </div>
+      <div class="dash-card red">
+        <div class="dash-icon">⏳</div>
+        <div class="dash-metric" id="pending-count">0</div>
+        <div class="dash-metric-label">Pending Pickup</div>
+      </div>
+    </div>
+
+    <h3 style="font-family: var(--font-display); font-size: 1.2rem; margin-bottom: 1rem;">Recent Donation Activity</h3>
+    <div class="activity-table">
+      <div class="table-header">
+        <div>Food Item</div>
+        <div>Donor</div>
+        <div>Qty</div>
+        <div>Status</div>
+        <div>Date</div>
+      </div>
+      <div id="activity-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CLAIM MODAL -->
+<div class="modal-overlay" id="claim-modal">
+  <div class="modal">
+    <h3>Claim this Donation</h3>
+    <p id="modal-desc">Confirm you'd like to claim this donation. The donor will be notified and you can coordinate pickup.</p>
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label>Your Organization Name</label>
+      <input type="text" id="claimer-name" placeholder="Organization or your name" />
+    </div>
+    <div class="form-group" style="margin-bottom:1.5rem;">
+      <label>Contact Number</label>
+      <input type="tel" id="claimer-phone" placeholder="+91 XXXXX XXXXX" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-close" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmClaim()">Confirm Claim</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✅ <span id="toast-msg">Done!</span></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const colors = ['#1a2e1a','#2e1a1a','#1a1a2e','#2e2a1a','#1a2e2e'];
+const emojis = { 'Cooked Meals':'🍱','Fresh Produce':'🥦','Bakery Items':'🍞','Dairy':'🥛','Meat / Protein':'🥩','Packaged / Canned':'🥫','Beverages':'🧃','Vegan / Vegetarian':'🥗' };
+
+let donations = [
+  { id:1, name:'Biryani & Raita', qty:'30 servings', type:'Cooked Meals', donor:'Hotel Spice Garden', addr:'MG Road, Kurnool', window:'Within 2 hrs', status:'Available', date:'2025-05-01', allergens:'Contains dairy' },
+  { id:2, name:'Fresh Vegetables Assortment', qty:'15 kg', type:'Fresh Produce', donor:'Raju Farms', addr:'Nandyal Road, Kurnool', window:'Today', status:'Available', date:'2025-05-01', allergens:'None' },
+  { id:3, name:'Bread Loaves & Buns', qty:'50 pcs', type:'Bakery Items', donor:'Morning Bakery', addr:'College Road, Kurnool', window:'1–3 hours', status:'Claimed', date:'2025-04-30', allergens:'Contains gluten' },
+  { id:4, name:'Rice & Dal Packets', qty:'40 servings', type:'Cooked Meals', donor:'Sri Ram Canteen', addr:'Bus Stand, Kurnool', window:'Today', status:'Available', date:'2025-05-01', allergens:'Vegan' },
+  { id:5, name:'Milk Packets', qty:'30 liters', type:'Dairy', donor:'Amul Outlet', addr:'Station Road, Kurnool', window:'Tomorrow morning', status:'Available', date:'2025-05-01', allergens:'Contains dairy' },
+  { id:6, name:'Canned Pulses & Beans', qty:'20 cans', type:'Packaged / Canned', donor:'Big Bazaar', addr:'Old Town, Kurnool', window:'Flexible', status:'Available', date:'2025-04-29', allergens:'None' },
+];
+
+let requests = [
+  { id:1, org:'Sree Balaji Orphanage', need:'Cooked meals for 40 children, lunch & dinner', qty:'80 servings', serves:'40 children', urgency:'high', location:'Kurnool City', since:'3 days' },
+  { id:2, org:'Mother Teresa Home', need:'Groceries, rice, lentils for elderly residents', qty:'25 kg', serves:'30 elderly', urgency:'medium', location:'Nandyal Road', since:'1 day' },
+  { id:3, org:'Kurnool Food Bank', need:'Any non-perishable canned or packaged foods', qty:'Any amount', serves:'200+ families', urgency:'low', location:'Station Rd', since:'5 days' },
+  { id:4, org:'Rainbow Children Centre', need:'Milk and nutritious snacks for toddlers', qty:'20 liters + snacks', serves:'25 toddlers', urgency:'high', location:'Hospital Colony', since:'1 day' },
+  { id:5, org:'Helping Hands NGO', need:'Cooked food or raw materials for flood-affected families', qty:'100+ servings', serves:'100 families', urgency:'high', location:'Flood Relief Camp', since:'Today' },
+  { id:6, org:'Old Age Home Ashram', need:'Soft foods – idli, upma, khichdi preferred', qty:'30 servings', serves:'30 seniors', urgency:'medium', location:'Sundaraiah Nagar', since:'2 days' },
+];
+
+let currentClaimId = null;
+
+// ── NAVIGATION ──────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+  if (name === 'listings') renderListings(donations);
+  if (name === 'requests') renderRequests();
+  if (name === 'dashboard') renderDashboard();
+}
+
+// ── FOOD TYPE TOGGLE ────────────────────────────────────────────────
+function toggleType(btn) { btn.classList.toggle('selected'); }
+
+// ── DONATE FORM ─────────────────────────────────────────────────────
+function clearDonateForm() {
+  ['food-name','food-qty','food-date','food-expiry','allergens','food-notes','donor-name','donor-phone','pickup-addr'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('pickup-window').value = '';
+  document.getElementById('recipient-pref').value = '';
+  document.querySelectorAll('.food-type-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function submitDonation() {
+  const name = document.getElementById('food-name').value.trim();
+  const qty = document.getElementById('food-qty').value.trim();
+  const donor = document.getElementById('donor-name').value.trim();
+  const addr = document.getElementById('pickup-addr').value.trim();
+  const window_ = document.getElementById('pickup-window').value;
+  if (!name || !qty || !donor || !addr || !window_) {
+    showToast('⚠️ Please fill all required fields.', '#e8832a'); return;
+  }
+  const types = [...document.querySelectorAll('.food-type-btn.selected')].map(b => b.textContent.trim().replace(/^\S+\s/,''));
+  const type = types[0] || 'Other';
+  donations.unshift({ id: Date.now(), name, qty, type, donor, addr, window: window_, status: 'Available', date: new Date().toISOString().slice(0,10), allergens: document.getElementById('allergens').value || 'None' });
+  showToast('🎉 Donation listed successfully!', '#4caf7d');
+  clearDonateForm();
+  setTimeout(() => showPage('listings'), 1200);
+}
+
+// ── LISTINGS ─────────────────────────────────────────────────────────
+function renderListings(data) {
+  const grid = document.getElementById('listings-grid');
+  if (!data.length) { grid.innerHTML = '<div class="empty-state"><div class="icon">🍽️</div><p>No donations found.</p></div>'; return; }
+  grid.innerHTML = data.map(d => {
+    const icon = Object.entries(emojis).find(([k]) => d.type.includes(k.split(' ')[0]))?.[1] || '🍱';
+    const bgColor = colors[d.id % colors.length];
+    const statusTag = d.status === 'Available' ? '<span class="tag tag-available">● Available</span>' : '<span class="tag tag-claimed">✓ Claimed</span>';
+    return `<div class="listing-card" onclick="openClaim(${d.id})">
+      <div class="listing-img" style="background:${bgColor}">${icon}</div>
+      <div class="listing-body">
+        <div class="listing-tags"><span class="tag tag-food">${d.type}</span>${statusTag}</div>
+        <div class="listing-title">${d.name}</div>
+        <div class="listing-meta">📍 ${d.addr}<br>⏰ Pickup: ${d.window}<br>⚠️ ${d.allergens}</div>
+        <div class="listing-footer">
+          <div class="listing-qty">📦 ${d.qty}</div>
+          <button class="claim-btn ${d.status==='Claimed'?'claimed':''}" onclick="event.stopPropagation();openClaim(${d.id})">${d.status==='Claimed'?'Claimed':'Claim'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterListings() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const type = document.getElementById('filter-type').value;
+  const status = document.getElementById('filter-status').value;
+  const filtered = donations.filter(d =>
+    (!q || d.name.toLowerCase().includes(q) || d.addr.toLowerCase().includes(q)) &&
+    (!type || d.type === type) &&
+    (!status || d.status === status)
+  );
+  renderListings(filtered);
+}
+
+// ── REQUESTS ────────────────────────────────────────────────────────
+function renderRequests() {
+  const grid = document.getElementById('requests-grid');
+  grid.innerHTML = requests.map(r => {
+    const uc = r.urgency === 'high' ? 'urgency-high' : r.urgency === 'medium' ? 'urgency-medium' : 'urgency-low';
+    const ul = r.urgency.charAt(0).toUpperCase() + r.urgency.slice(1) + ' Urgency';
+    return `<div class="request-card">
+      <div class="request-header">
+        <div class="request-org">${r.org}</div>
+        <div class="urgency-badge ${uc}">${ul}</div>
+      </div>
+      <div class="request-need">${r.need}</div>
+      <div class="request-details">
+        <div class="detail-item"><div class="detail-label">Needed</div><div class="detail-value">${r.qty}</div></div>
+        <div class="detail-item"><div class="detail-label">Serves</div><div class="detail-value">${r.serves}</div></div>
+        <div class="detail-item"><div class="detail-label">Location</div><div class="detail-value">${r.location}</div></div>
+        <div class="detail-item"><div class="detail-label">Posted</div><div class="detail-value">${r.since} ago</div></div>
+      </div>
+      <button class="fulfill-btn" onclick="fulfillRequest('${r.org}')">🤝 Fulfill This Request</button>
+    </div>`;
+  }).join('');
+}
+
+function fulfillRequest(org) {
+  showToast(`📬 Redirecting you to donate for ${org}`, '#4caf7d');
+  setTimeout(() => showPage('donate'), 900);
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────────
+function renderDashboard() {
+  const total = donations.length;
+  const claimed = donations.filter(d => d.status === 'Claimed').length;
+  const pending = donations.filter(d => d.status === 'Available').length;
+  const meals = claimed * 25 + Math.floor(Math.random() * 10);
+  document.getElementById('total-donations').textContent = total;
+  document.getElementById('claimed-count').textContent = claimed;
+  document.getElementById('meals-count').textContent = meals;
+  document.getElementById('pending-count').textContent = pending;
+
+  const body = document.getElementById('activity-body');
+  body.innerHTML = donations.slice(0,8).map(d => {
+    const dotClass = d.status === 'Available' ? 'dot-green' : d.status === 'Claimed' ? 'dot-yellow' : 'dot-red';
+    return `<div class="table-row">
+      <div>${d.name}</div>
+      <div style="color:var(--muted)">${d.donor}</div>
+      <div>${d.qty}</div>
+      <div><span class="status-dot"><span class="dot ${dotClass}"></span>${d.status}</span></div>
+      <div style="color:var(--muted)">${d.date}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── CLAIM MODAL ──────────────────────────────────────────────────────
+function openClaim(id) {
+  const d = donations.find(x => x.id === id);
+  if (!d || d.status === 'Claimed') return;
+  currentClaimId = id;
+  document.getElementById('modal-desc').textContent = `You're about to claim "${d.name}" (${d.qty}) from ${d.donor}. Pickup: ${d.window}.`;
+  document.getElementById('claim-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('claim-modal').classList.remove('open');
+  currentClaimId = null;
+}
+
+function confirmClaim() {
+  const name = document.getElementById('claimer-name').value.trim();
+  if (!name) { showToast('⚠️ Please enter your organization name.', '#e8832a'); return; }
+  const d = donations.find(x => x.id === currentClaimId);
+  if (d) d.status = 'Claimed';
+  closeModal();
+  showToast('🎊 Donation claimed! Donor has been notified.', '#4caf7d');
+  renderListings(donations);
+}
+
+// ── TOAST ────────────────────────────────────────────────────────────
+function showToast(msg, color = '#4caf7d') {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.style.background = color;
+  t.innerHTML = '<span id="toast-msg">' + msg + '</span>';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────
+// Animate stat counter
+function animateCounter(el, target) {
+  let cur = 0; const step = Math.ceil(target / 60);
+  const iv = setInterval(() => { cur = Math.min(cur + step, target); el.textContent = cur.toLocaleString(); if (cur >= target) clearInterval(iv); }, 20);
+}
+setTimeout(() => animateCounter(document.getElementById('stat-meals'), 2847), 300);
+</script>
+</body>
+</html>
